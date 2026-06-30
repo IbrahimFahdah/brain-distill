@@ -2,6 +2,8 @@
 
 A chain of six Claude Code skills that interview a human expert and convert their tacit knowledge into structured, RAG-ready output. Inspired by [Matt Pocock's skills concept](https://github.com/mattpocock/skills).
 
+> **Format note:** Each skill is a flat `.md` file with YAML frontmatter (`name`, `user-invocable: true`, `allowed-tools`). Claude Code discovers these from `.claude/skills/*.md` in your project directory, or from `~/.claude/skills/*.md` globally, and makes them available as `/knowledge-*` slash commands. They are not SKILL.md package-style skills.
+
 ```
 /knowledge-init
        ↓
@@ -165,7 +167,11 @@ Schemas for validating the JSON outputs are in [`schema/`](schema/):
 - [`schema/session.schema.json`](schema/session.schema.json) — validates `session-NNN.json`
 - [`schema/structured-knowledge.schema.json`](schema/structured-knowledge.schema.json) — validates `session-NNN-structured.json`
 
-End-to-end example files are in [`examples/`](examples/).
+Example files covering the full pipeline are in [`examples/`](examples/):
+- [`examples/session-001.json`](examples/session-001.json) — session metadata
+- [`examples/session-001-raw.md`](examples/session-001-raw.md) — verbatim interview transcript
+- [`examples/session-001-annotated.md`](examples/session-001-annotated.md) — reviewer-annotated transcript
+- [`examples/session-001-structured.json`](examples/session-001-structured.json) — typed knowledge objects
 
 ---
 

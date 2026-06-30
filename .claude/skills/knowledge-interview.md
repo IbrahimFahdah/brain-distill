@@ -47,9 +47,13 @@ Do not ask multiple questions at once — ever.
 
 ---
 
-## Persistence guarantee
+## Interaction model and persistence guarantee
 
-After **every single user answer**, before asking the next question, append to the transcript. This is non-negotiable — if the session is interrupted, every answer up to that point must already be on disk. Do not batch. Do not wait until the end.
+In Claude Code, invoking `/knowledge-interview` starts a conversation turn where these skill instructions are active. Every subsequent user reply in the same session continues that conversation — the skill instructions remain in context for the duration of the dialogue, so the append-before-next-question rule is enforced on every turn without re-invoking the skill.
+
+If the conversation is interrupted (session closed, context reset), re-run `/knowledge-interview <session-id>`. The skill reads the transcript, counts existing Q&A pairs, and resumes from the next unanswered topic — no data is lost because every answer was already written to disk.
+
+**Append rule:** After **every single user answer**, before asking the next question, write to the transcript. Do not batch. Do not wait until `done`.
 
 ---
 

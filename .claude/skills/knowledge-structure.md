@@ -78,6 +78,7 @@ Write `./knowledge-sessions/<session-id>-structured.json`:
       "tags": ["<tag>", "<tag>"],
       "related_ids": ["<id of related object in this session>"],
       "confidence": "high | medium | low",
+      "priority": true,
       "ambiguity_note": "<optional — note if the source was unclear or if an assumption was made>",
       "source_quote": "<the verbatim answer this was extracted from, truncated to ~200 chars>"
     }
@@ -95,11 +96,19 @@ Rules for writing `body`:
 
 ---
 
-## Step 4: Quality check
+## Step 4: Validate against schema
 
-After writing, re-read the structured JSON and verify:
+Read `./schema/structured-knowledge.schema.json`. Check the file you just wrote against every constraint in it:
+
+- `session_id`, `topic`, `expert`, `structured_at`, `purpose`, `knowledge` — all present and non-empty
+- Each knowledge object: `id` matches `^session-[0-9]{3}-[0-9]{3}$`, `type` is one of the eight allowed values, `title` ≤ 120 chars, `confidence` is `high | medium | low`, `tags` has at least one entry, `source_quote` ≤ 250 chars
+- No unexpected extra fields (the schema is `additionalProperties: false`)
+
+Fix any violations before continuing. Report which fields you corrected, if any.
+
+Then verify content quality:
 - Every significant claim from the annotated transcript appears in at least one object
-- Priority items (from the review step) are included and marked in `priority_items`
+- Priority items (from the review step) are included in `priority_items` and have `"priority": true` on the object
 - No object body requires reading another object to understand it
 - Tags are consistent (e.g. don't use both "k8s" and "kubernetes")
 
