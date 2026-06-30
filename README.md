@@ -28,17 +28,20 @@ The key design: the **Extractor** (interview) and **Structurer** (formatting) ar
 
 ## Installation
 
-Clone this repo into your project and Claude Code will discover the skills automatically:
+Copy the skill files into your project's Claude skills directory:
 
 ```bash
-git clone https://github.com/IbrahimFahdah/brain-distill .claude/skills/knowledge-extraction
+# From inside your target project
+cp -r /path/to/brain-distill/.claude/skills/knowledge-*.md .claude/skills/
 ```
 
-Or copy the `.claude/skills/` folder into any existing project:
+Or install globally so the skills are available in every project:
 
 ```bash
-cp -r .claude/skills/* your-project/.claude/skills/
+cp /path/to/brain-distill/.claude/skills/knowledge-*.md ~/.claude/skills/
 ```
+
+Do not clone this repo directly into `.claude/skills/` — that creates a nested `.claude/skills/knowledge-extraction/.claude/skills/` path that Claude Code will not discover.
 
 No dependencies. No API keys beyond your Claude Code session.
 
@@ -146,16 +149,23 @@ Output: `./knowledge-base/merged.json` and `./knowledge-base/index.md`.
 
 ```
 your-project/
-└── knowledge-sessions/
-    ├── session-001.json              ← session metadata and status
-    ├── session-001-raw.md            ← verbatim interview transcript
-    ├── session-001-annotated.md      ← transcript + reviewer additions
-    ├── session-001-structured.json   ← typed knowledge objects
-    └── session-001-export.jsonl      ← RAG-ready chunks (or .md files)
-knowledge-base/
-    ├── merged.json                   ← unified knowledge base
-    └── index.md                      ← human-readable topic index
+├── knowledge-sessions/
+│   ├── session-001.json              <- session metadata and status
+│   ├── session-001-raw.md            <- verbatim interview transcript
+│   ├── session-001-annotated.md      <- transcript + reviewer additions
+│   ├── session-001-structured.json   <- typed knowledge objects
+│   └── session-001-export.jsonl      <- RAG-ready chunks (or .md files)
+└── knowledge-base/
+    ├── merged.json                   <- unified knowledge base
+    ├── conflicts.md                  <- contradiction log from /knowledge-merge
+    └── index.md                      <- human-readable topic index
 ```
+
+Schemas for validating the JSON outputs are in [`schema/`](schema/):
+- [`schema/session.schema.json`](schema/session.schema.json) — validates `session-NNN.json`
+- [`schema/structured-knowledge.schema.json`](schema/structured-knowledge.schema.json) — validates `session-NNN-structured.json`
+
+End-to-end example files are in [`examples/`](examples/).
 
 ---
 
@@ -186,16 +196,23 @@ knowledge-base/
 
 ---
 
-## Skills
+## Repository layout
 
 ```
 .claude/skills/
-├── knowledge-init.md
-├── knowledge-interview.md
-├── knowledge-review.md
-├── knowledge-structure.md
-├── knowledge-export.md
-└── knowledge-merge.md
+├── knowledge-init.md        <- /knowledge-init
+├── knowledge-interview.md   <- /knowledge-interview
+├── knowledge-review.md      <- /knowledge-review
+├── knowledge-structure.md   <- /knowledge-structure
+├── knowledge-export.md      <- /knowledge-export
+└── knowledge-merge.md       <- /knowledge-merge
+schema/
+├── session.schema.json
+└── structured-knowledge.schema.json
+examples/
+├── session-001.json
+├── session-001-raw.md
+└── session-001-structured.json
 ```
 
 ---

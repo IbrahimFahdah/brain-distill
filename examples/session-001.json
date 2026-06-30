@@ -1,0 +1,15 @@
+{
+  "session_id": "session-001",
+  "created_at": "2025-06-30T10:00:00Z",
+  "topic": "Kubernetes networking troubleshooting",
+  "expert": "Alex Chen, Platform Engineer",
+  "purpose": "rag",
+  "depth": "practitioner",
+  "status": "structured",
+  "files": {
+    "raw_transcript": "session-001-raw.md",
+    "annotated": "session-001-annotated.md",
+    "structured": "session-001-structured.json",
+    "export": "session-001-export.jsonl"
+  }
+}

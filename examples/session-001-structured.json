@@ -1,0 +1,62 @@
+{
+  "session_id": "session-001",
+  "topic": "Kubernetes networking troubleshooting",
+  "expert": "Alex Chen, Platform Engineer",
+  "structured_at": "2025-06-30T11:30:00Z",
+  "purpose": "rag",
+  "priority_items": ["session-001-004", "session-001-005"],
+  "knowledge": [
+    {
+      "id": "session-001-001",
+      "type": "procedure",
+      "title": "First steps when a pod cannot reach another service",
+      "body": "When a pod cannot reach another service inside the cluster, start with DNS resolution before testing connectivity. Run `kubectl exec` into the failing pod and run: `nslookup <service-name>.<namespace>.svc.cluster.local`. If the name does not resolve, the problem is at the DNS or service-existence layer — not the network layer. Debugging connectivity before confirming DNS resolution wastes time and masks the real cause.",
+      "tags": ["kubernetes", "networking", "debugging", "dns"],
+      "related_ids": ["session-001-002", "session-001-003"],
+      "confidence": "high",
+      "source_quote": "The first thing I always check is whether the DNS name resolves. Most people go straight to curl or netcat, but if the name doesn't resolve you're debugging the wrong layer."
+    },
+    {
+      "id": "session-001-002",
+      "type": "rule",
+      "title": "Diagnose CoreDNS failures by return code, not just failure",
+      "body": "When `nslookup` fails inside a Kubernetes pod, the return code distinguishes the cause: NXDOMAIN means the service does not exist or is in the wrong namespace; SERVFAIL or a hanging request means CoreDNS itself is unhealthy. When CoreDNS is unhealthy, check that its pods are running and review its logs. CoreDNS pods may be scheduled on nodes with network problems, making the failure appear cluster-wide when only specific nodes are affected.",
+      "tags": ["kubernetes", "dns", "coredns", "debugging"],
+      "related_ids": ["session-001-001"],
+      "confidence": "high",
+      "source_quote": "If it hangs or returns SERVFAIL, that's CoreDNS itself having a problem... the symptom looks like DNS is broken cluster-wide but it's really just the nodes that CoreDNS landed on."
+    },
+    {
+      "id": "session-001-003",
+      "type": "rule",
+      "title": "Always use fully qualified service names when crossing namespaces",
+      "body": "Within the same Kubernetes namespace, a short service name resolves correctly. Across namespaces, short names silently fail. Use the fully qualified domain name in all cases: `<service>.<namespace>.svc.cluster.local`. Omitting the namespace suffix when calling cross-namespace services is a common mistake that produces silent DNS resolution failures with no error message indicating the real cause.",
+      "tags": ["kubernetes", "dns", "namespaces", "gotcha"],
+      "related_ids": ["session-001-001", "session-001-002"],
+      "confidence": "high",
+      "source_quote": "The moment you cross namespaces without the full name, it silently fails. I've seen engineers spend two hours on this."
+    },
+    {
+      "id": "session-001-004",
+      "type": "warning",
+      "title": "Adding the first NetworkPolicy to a namespace silently blocks all existing traffic",
+      "body": "Kubernetes NetworkPolicies are additive and default-deny once any policy exists in a namespace. Adding the first NetworkPolicy to a namespace that previously had none will block all traffic not explicitly permitted by that policy — including traffic that was working correctly before. This commonly affects services that were not mentioned in the new policy at all. When introducing NetworkPolicies into a namespace for the first time, audit all existing traffic flows and explicitly allow them before applying the policy.",
+      "tags": ["kubernetes", "networking", "networkpolicy", "gotcha", "deny-by-default"],
+      "related_ids": ["session-001-001"],
+      "confidence": "high",
+      "priority": true,
+      "source_quote": "NetworkPolicies are additive and deny-by-default once any policy exists in a namespace — so adding your first NetworkPolicy to a namespace silently blocks all traffic that wasn't explicitly allowed."
+    },
+    {
+      "id": "session-001-005",
+      "type": "edge_case",
+      "title": "Retry-with-backoff must not be used on payment processing endpoints",
+      "body": "Standard retry-with-backoff logic must not be applied to payment processing endpoints. If a payment request succeeds but the response is lost due to a network timeout, a retry will issue a duplicate charge. The correct pattern for payment endpoints is to use idempotency keys so that retried requests with the same key are deduplicated server-side. Any HTTP client wrapper or retry decorator that is safe for idempotent endpoints is unsafe for payment endpoints without this protection.",
+      "tags": ["payments", "reliability", "retries", "idempotency", "edge-case"],
+      "related_ids": [],
+      "confidence": "high",
+      "priority": true,
+      "source_quote": "A network timeout hit a payment endpoint, the retry fired, and the customer got charged twice because the first request had actually succeeded — the response just got lost."
+    }
+  ]
+}

@@ -32,9 +32,24 @@ Update the session JSON: set `"status": "in-progress"`.
 
 ## Step 2: Open the interview
 
-Read the existing transcript file (`<session-id>-raw.md`) to see if any Q&A has already been captured (resuming a session).
+Read the existing transcript file (`<session-id>-raw.md`).
 
-Greet the user with one sentence explaining what you're doing, then immediately ask the **first question**. Do not ask multiple questions at once — ever.
+**If the transcript contains Q&A pairs already** (resuming a paused session):
+- Count existing Q&A pairs
+- Tell the user: "Resuming session-NNN — N exchanges already saved. Continuing from: [last question asked]."
+- Do NOT re-ask questions that are already answered in the transcript
+- Continue the interview from the next logical topic
+
+**If the transcript is empty or contains only the header** (fresh session):
+- Greet the user with one sentence, then immediately ask the **first question**
+
+Do not ask multiple questions at once — ever.
+
+---
+
+## Persistence guarantee
+
+After **every single user answer**, before asking the next question, append to the transcript. This is non-negotiable — if the session is interrupted, every answer up to that point must already be on disk. Do not batch. Do not wait until the end.
 
 ---
 

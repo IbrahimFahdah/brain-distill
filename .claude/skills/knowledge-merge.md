@@ -34,30 +34,52 @@ Load the structured JSON for each selected session.
 
 ## Step 2: Deduplicate
 
-Compare all knowledge objects across sessions. Two objects are **duplicates** if they express the same claim about the same thing, even if worded differently.
+Compare all knowledge objects across sessions using these rules in order:
 
-For each duplicate group:
-- Keep the version with higher confidence.
-- If equal confidence, keep the one with more detail in the body.
-- Add a `merged_from` field listing all session IDs that contributed.
-- If the two versions **contradict** each other (one says X, one says not-X), flag it instead of silently picking one (see conflict handling below).
+1. **Exact title match** — treat as duplicate; compare bodies before merging.
+2. **Same `type` + 2+ shared named entities** (function names, system names, metric names, product names) — likely duplicate; review both bodies.
+3. **When in doubt, keep both** — a false negative (keeping a near-duplicate) is safer than a false positive (merging distinct knowledge). Mark uncertain cases with `"merge_confidence": "low"` in `merged_from`.
+
+**Winner selection when merging a duplicate pair:**
+- `high` confidence beats `medium` beats `low`
+- Equal confidence: keep the object with the longer `body`
+- Both bodies equal length: prefer the object that has a `source_quote`
+
+Add a `merged_from` array to the kept object, listing all session IDs and original object IDs that were merged into it:
+```json
+"merged_from": [
+  {"session": "session-001", "original_id": "session-001-007"},
+  {"session": "session-002", "original_id": "session-002-003"}
+]
+```
+
+If two versions **contradict** each other (one says X, one says not-X), flag it instead of silently picking one (see conflict handling below).
 
 ---
 
 ## Step 3: Resolve conflicts
 
-List all contradictions found. For each:
+Write every contradiction to `./knowledge-base/conflicts.md` using this format, then present them to the user one at a time:
 
+```markdown
+## Conflict: <title>
+**Detected:** <ISO date>
+**Type:** factual | procedural | policy
+
+| | Session | Expert | Body excerpt (first 150 chars) |
+|---|---|---|---|
+| A | <session-id> | <expert> | <excerpt> |
+| B | <session-id> | <expert> | <excerpt> |
+
+**Resolution:** pending
+**Notes:**
 ```
-CONFLICT: <title>
-  Session <id-1> (<expert-1>): "<body excerpt>"
-  Session <id-2> (<expert-2>): "<body excerpt>"
-```
 
-Ask the user to resolve each one:
-- "Which version is correct, or is there a nuance that reconciles them?"
+For each conflict, ask: "Which version is correct — A, B, or is there a nuance that reconciles them?"
 
-Record the resolution and update the merged object. If the user says both are correct in different contexts, split into two objects with distinct `tags` or a conditional framing in the body.
+- **A or B wins**: update `conflicts.md` resolution field; use the winning body in the merged object.
+- **Both correct in different contexts**: split into two objects with distinct `tags` and a scoping phrase in the body (e.g. "When using X: …", "When using Y: …").
+- **User unsure**: keep both objects, mark `"confidence": "low"`, leave resolution as `pending` in `conflicts.md`.
 
 ---
 
@@ -88,6 +110,12 @@ Write `./knowledge-base/merged.json`:
 ```
 
 Global IDs format: `kb-<zero-padded-sequential-number>` (e.g. `kb-001`).
+
+Before writing the merged file, build a mapping table of every original ID to its new global ID:
+```
+{ "session-001-007": "kb-001", "session-002-003": "kb-001", "session-001-012": "kb-002", ... }
+```
+Then substitute all `related_ids` values in every object using this table so cross-session links remain valid.
 
 Also write `./knowledge-base/index.md` — a human-readable topic index:
 

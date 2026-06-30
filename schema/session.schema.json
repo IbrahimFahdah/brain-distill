@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "session.schema.json",
+  "title": "Knowledge Extraction Session",
+  "type": "object",
+  "required": ["session_id", "created_at", "topic", "expert", "purpose", "depth", "status", "files"],
+  "additionalProperties": false,
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "pattern": "^session-[0-9]{3}$",
+      "description": "Unique session identifier, e.g. session-001"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "topic": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expert": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose": {
+      "type": "string",
+      "enum": ["rag", "docs", "onboarding", "other"]
+    },
+    "depth": {
+      "type": "string",
+      "enum": ["surface", "practitioner", "expert"]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "initialized",
+        "in-progress",
+        "interview-complete",
+        "reviewed",
+        "structured",
+        "exported"
+      ]
+    },
+    "export_format": {
+      "type": "string",
+      "enum": ["rag", "markdown", "yaml"],
+      "description": "Set by /knowledge-export"
+    },
+    "files": {
+      "type": "object",
+      "required": ["raw_transcript", "annotated", "structured", "export"],
+      "additionalProperties": false,
+      "properties": {
+        "raw_transcript": { "type": "string" },
+        "annotated":      { "type": "string" },
+        "structured":     { "type": "string" },
+        "export":         { "type": "string" }
+      }
+    }
+  }
+}

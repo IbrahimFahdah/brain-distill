@@ -48,9 +48,12 @@ If `$ARGUMENTS` is provided, use it as the topic and skip question 1.
 
 1. Check if `./knowledge-sessions/` exists. If not, create it.
 
-2. Count existing sessions to determine the next ID:
+2. Determine the next session ID:
    - List `./knowledge-sessions/session-*.json` files
-   - Next ID = count + 1, zero-padded to 3 digits (e.g. `session-001`)
+   - Extract the numeric suffix from each filename (e.g. `session-003.json` → `3`)
+   - Next ID = **highest suffix found + 1**, zero-padded to 3 digits (e.g. `session-004`)
+   - If no sessions exist, start at `001`
+   - Do NOT use file count — deleted sessions would cause ID collisions
 
 3. Write `./knowledge-sessions/<session-id>.json`:
 
