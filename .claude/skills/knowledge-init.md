@@ -1,0 +1,98 @@
+---
+name: knowledge-init
+description: Start a new knowledge extraction session. Use when the user wants to capture expertise, document know-how, build a knowledge base, or begin an interview with a subject matter expert. Creates the session scaffold for the /knowledge-interview → /knowledge-structure → /knowledge-export pipeline.
+argument-hint: [topic]
+user-invocable: true
+allowed-tools:
+  - Read
+  - Write
+  - Bash(ls *)
+  - Bash(mkdir *)
+  - Bash(echo *)
+---
+
+# /knowledge-init — Start a Knowledge Extraction Session
+
+Arguments: `$ARGUMENTS`
+
+You are setting up a new knowledge extraction session. This is the first step in the pipeline:
+
+```
+/knowledge-init → /knowledge-interview → /knowledge-review → /knowledge-structure → /knowledge-export
+```
+
+---
+
+## Step 1: Gather session details (ask ONE question at a time, wait for each answer)
+
+If `$ARGUMENTS` is provided, use it as the topic and skip question 1.
+
+1. **Topic/domain**: "What topic or domain are we extracting knowledge from? Be as specific as you can — e.g. 'Kubernetes networking troubleshooting' not just 'DevOps'."
+
+2. **Expert**: "Who is the knowledge holder? (Name/role — this is for session metadata, not shared externally.)"
+
+3. **Purpose**: "What will this knowledge be used for?"
+   - A) RAG / semantic search (chunks go into a vector DB)
+   - B) Internal documentation (readable Markdown pages)
+   - C) Onboarding material (structured guides for new team members)
+   - D) Other — describe it
+
+4. **Depth**: "How deep should we go?"
+   - A) Surface level — key concepts and rules of thumb
+   - B) Practitioner depth — the reasoning behind decisions, edge cases, gotchas
+   - C) Expert depth — mental models, failure modes, subtle invariants, institutional knowledge
+
+---
+
+## Step 2: Create session files
+
+1. Check if `./knowledge-sessions/` exists. If not, create it.
+
+2. Count existing sessions to determine the next ID:
+   - List `./knowledge-sessions/session-*.json` files
+   - Next ID = count + 1, zero-padded to 3 digits (e.g. `session-001`)
+
+3. Write `./knowledge-sessions/<session-id>.json`:
+
+```json
+{
+  "session_id": "<session-id>",
+  "created_at": "<ISO date>",
+  "topic": "<topic from user>",
+  "expert": "<expert name/role>",
+  "purpose": "<purpose choice>",
+  "depth": "<depth choice>",
+  "status": "initialized",
+  "files": {
+    "raw_transcript": "<session-id>-raw.md",
+    "annotated": "<session-id>-annotated.md",
+    "structured": "<session-id>-structured.json",
+    "export": "<session-id>-export.jsonl"
+  }
+}
+```
+
+4. Write `./knowledge-sessions/<session-id>-raw.md` with just a header:
+
+```markdown
+# Knowledge Extraction: <topic>
+**Session:** <session-id>
+**Expert:** <expert>
+**Date:** <date>
+**Purpose:** <purpose>
+**Depth:** <depth>
+
+---
+
+<!-- Interview transcript below — appended during /knowledge-interview -->
+```
+
+---
+
+## Step 3: Confirm and orient the user
+
+Tell the user:
+- Session ID created (e.g. `session-001`)
+- Where files live (`./knowledge-sessions/`)
+- The exact next command to run: `/knowledge-interview <session-id>`
+- Brief note: the interview will ask questions — the user answers as themselves or relays the expert's answers. They type `done` when finished.
