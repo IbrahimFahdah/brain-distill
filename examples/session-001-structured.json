@@ -4,7 +4,7 @@
   "expert": "Alex Chen, Platform Engineer",
   "structured_at": "2025-06-30T11:30:00Z",
   "purpose": "rag",
-  "priority_items": ["session-001-004", "session-001-005"],
+  "priority_items": ["session-001-003", "session-001-004", "session-001-006"],
   "knowledge": [
     {
       "id": "session-001-001",
@@ -20,11 +20,12 @@
       "id": "session-001-002",
       "type": "rule",
       "title": "Diagnose CoreDNS failures by return code, not just failure",
-      "body": "When `nslookup` fails inside a Kubernetes pod, the return code distinguishes the cause: NXDOMAIN means the service does not exist or is in the wrong namespace; SERVFAIL or a hanging request means CoreDNS itself is unhealthy. When CoreDNS is unhealthy, check that its pods are running and review its logs. CoreDNS pods may be scheduled on nodes with network problems, making the failure appear cluster-wide when only specific nodes are affected.",
-      "tags": ["kubernetes", "dns", "coredns", "debugging"],
+      "body": "When `nslookup` fails inside a Kubernetes pod, the return code distinguishes the cause: NXDOMAIN means the service does not exist or is in the wrong namespace; SERVFAIL or a hanging request means CoreDNS itself is unhealthy. When CoreDNS appears unhealthy on specific nodes, check kube-proxy pod logs on those nodes — stale kube-proxy rules after a control-plane upgrade can cause DNS queries routed to CoreDNS pods on that node to fail while other nodes work correctly. Check that CoreDNS pods are running and review their logs alongside the kube-proxy logs on the affected node.",
+      "tags": ["kubernetes", "dns", "coredns", "kube-proxy", "debugging"],
       "related_ids": ["session-001-001"],
       "confidence": "high",
-      "source_quote": "If it hangs or returns SERVFAIL, that's CoreDNS itself having a problem... the symptom looks like DNS is broken cluster-wide but it's really just the nodes that CoreDNS landed on."
+      "source_quote": "If it hangs or returns SERVFAIL, that's CoreDNS itself having a problem... check kube-proxy pod logs on the affected node if DNS failures appear node-specific.",
+      "ambiguity_note": "Reviewer clarified: node-specific DNS failures are more often stale kube-proxy rules than CoreDNS scheduling; original transcript conflated the two."
     },
     {
       "id": "session-001-003",
@@ -34,6 +35,7 @@
       "tags": ["kubernetes", "dns", "namespaces", "gotcha"],
       "related_ids": ["session-001-001", "session-001-002"],
       "confidence": "high",
+      "priority": true,
       "source_quote": "The moment you cross namespaces without the full name, it silently fails. I've seen engineers spend two hours on this."
     },
     {
@@ -49,6 +51,16 @@
     },
     {
       "id": "session-001-005",
+      "type": "warning",
+      "title": "Pod connectivity briefly fails after a node restart due to CNI reinitialisation",
+      "body": "When a Kubernetes node restarts, the CNI plugin reinitialises pod network interfaces. Pods that were running before the restart may lose connectivity to other pods on the same node for 30–60 seconds even after the kubelet marks them Ready, because the CNI has not yet fully restored the veth pairs. This is most visible with Flannel and Calico in VXLAN mode. The failure resolves on its own — do not restart pods to fix it, as that extends the outage. Monitor CNI plugin logs on the restarted node to confirm recovery.",
+      "tags": ["kubernetes", "networking", "cni", "node-restart", "flannel", "calico"],
+      "related_ids": ["session-001-001"],
+      "confidence": "high",
+      "source_quote": "When a node restarts, the CNI plugin re-initialises pod network interfaces... The symptom is pod-to-pod failures that resolve on their own within 30–60 seconds. Don't restart pods to fix it — wait."
+    },
+    {
+      "id": "session-001-006",
       "type": "edge_case",
       "title": "Retry-with-backoff must not be used on payment processing endpoints",
       "body": "Standard retry-with-backoff logic must not be applied to payment processing endpoints. If a payment request succeeds but the response is lost due to a network timeout, a retry will issue a duplicate charge. The correct pattern for payment endpoints is to use idempotency keys so that retried requests with the same key are deduplicated server-side. Any HTTP client wrapper or retry decorator that is safe for idempotent endpoints is unsafe for payment endpoints without this protection.",

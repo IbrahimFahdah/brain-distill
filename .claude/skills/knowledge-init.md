@@ -55,7 +55,22 @@ If `$ARGUMENTS` is provided, use it as the topic and skip question 1.
    - If no sessions exist, start at `001`
    - Do NOT use file count — deleted sessions would cause ID collisions
 
-3. Write `./knowledge-sessions/<session-id>.json`:
+3. Normalize the user's answers to schema enum values before writing:
+
+   | User answer | `purpose` value to write |
+   |---|---|
+   | A / RAG / semantic search / vector DB | `rag` |
+   | B / documentation / docs / internal docs | `docs` |
+   | C / onboarding / guides | `onboarding` |
+   | D / anything else | `other` |
+
+   | User answer | `depth` value to write |
+   |---|---|
+   | A / surface / key concepts / rules of thumb | `surface` |
+   | B / practitioner / reasoning / edge cases | `practitioner` |
+   | C / expert / mental models / failure modes | `expert` |
+
+4. Write `./knowledge-sessions/<session-id>.json`:
 
 ```json
 {
@@ -63,8 +78,8 @@ If `$ARGUMENTS` is provided, use it as the topic and skip question 1.
   "created_at": "<ISO date>",
   "topic": "<topic from user>",
   "expert": "<expert name/role>",
-  "purpose": "<purpose choice>",
-  "depth": "<depth choice>",
+  "purpose": "rag | docs | onboarding | other",
+  "depth": "surface | practitioner | expert",
   "status": "initialized",
   "files": {
     "raw_transcript": "<session-id>-raw.md",
@@ -75,7 +90,7 @@ If `$ARGUMENTS` is provided, use it as the topic and skip question 1.
 }
 ```
 
-4. Write `./knowledge-sessions/<session-id>-raw.md` with just a header:
+5. Write `./knowledge-sessions/<session-id>-raw.md` with just a header:
 
 ```markdown
 # Knowledge Extraction: <topic>

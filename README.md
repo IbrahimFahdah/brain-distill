@@ -218,6 +218,7 @@ schema/
 examples/
 ├── session-001.json
 ├── session-001-raw.md
+├── session-001-annotated.md
 └── session-001-structured.json
 ```
 
